@@ -1,0 +1,10 @@
+[project]
+name = "sistema-reposicion-mini-market"
+version = "0.1.0"
+description = "Sistema de prediccion de demanda y recomendacion de reposicion para un mini-market."
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+

@@ -1,0 +1,97 @@
+{
+  "name": "Mini-market retrain and replenishment report",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Daily schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "command": "cd /workspace && python scripts/train.py --sales-csv data/raw/sales_sample.csv --model-path models/demand_model.joblib --metrics-path reports/metrics.csv"
+      },
+      "id": "train-model",
+      "name": "Train model",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [520, 300]
+    },
+    {
+      "parameters": {
+        "command": "cd /workspace && python scripts/predict.py --horizon-days 14 --safety-stock-days 3 --forecast-path reports/forecast.csv --recommendations-path reports/recommendations.csv"
+      },
+      "id": "generate-recommendations",
+      "name": "Generate recommendations",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [800, 300]
+    },
+    {
+      "parameters": {
+        "filePath": "/workspace/reports/recommendations.csv"
+      },
+      "id": "read-recommendations",
+      "name": "Read recommendations CSV",
+      "type": "n8n-nodes-base.readBinaryFile",
+      "typeVersion": 1,
+      "position": [1080, 300]
+    }
+  ],
+  "connections": {
+    "Daily schedule": {
+      "main": [
+        [
+          {
+            "node": "Train model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Train model": {
+      "main": [
+        [
+          {
+            "node": "Generate recommendations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate recommendations": {
+      "main": [
+        [
+          {
+            "node": "Read recommendations CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "prototype",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": ["tfe", "mlops", "inventory"]
+}
+

@@ -1,0 +1,11 @@
+product_id,product_name,category,stock_on_hand,on_order,lead_time_days,pack_size,perishability_days,max_stock
+P001,Leche entera 1L,Lacteos,36,12,2,12,7,378
+P002,Pan tajado,Panaderia,26,0,1,10,5,504
+P003,Huevos x12,Basicos,39,0,3,12,21,336
+P004,Arroz 1kg,Despensa,50,24,4,24,365,210
+P005,Atun lata,Despensa,68,24,5,24,730,168
+P006,Yogur individual,Lacteos,97,0,2,20,10,420
+P007,Gaseosa 1.5L,Bebidas,52,12,3,12,180,294
+P008,Manzana roja kg,Frutas,20,0,2,8,8,273
+P009,Papel higienico x4,Aseo,25,0,6,12,365,147
+P010,Cafe molido 250g,Bebidas,35,0,5,10,365,126
