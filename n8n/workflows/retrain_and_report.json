@@ -1,4 +1,5 @@
 {
+  "id": "miniMarketTFE01",
   "name": "Mini-market retrain and replenishment report",
   "nodes": [
     {
@@ -20,33 +21,30 @@
     },
     {
       "parameters": {
-        "command": "cd /workspace && python scripts/train.py --sales-csv data/raw/sales_sample.csv --model-path models/demand_model.joblib --metrics-path reports/metrics.csv"
+        "method": "POST",
+        "url": "http://api-prediccion:8000/train?test_days=30",
+        "options": {
+          "timeout": 300000
+        }
       },
       "id": "train-model",
-      "name": "Train model",
-      "type": "n8n-nodes-base.executeCommand",
-      "typeVersion": 1,
+      "name": "Train model via API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [520, 300]
     },
     {
       "parameters": {
-        "command": "cd /workspace && python scripts/predict.py --horizon-days 14 --safety-stock-days 3 --forecast-path reports/forecast.csv --recommendations-path reports/recommendations.csv"
+        "url": "http://api-prediccion:8000/predict?horizon_days=14&safety_stock_days=3&review_period_days=1",
+        "options": {
+          "timeout": 300000
+        }
       },
       "id": "generate-recommendations",
-      "name": "Generate recommendations",
-      "type": "n8n-nodes-base.executeCommand",
-      "typeVersion": 1,
+      "name": "Generate recommendations via API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [800, 300]
-    },
-    {
-      "parameters": {
-        "filePath": "/workspace/reports/recommendations.csv"
-      },
-      "id": "read-recommendations",
-      "name": "Read recommendations CSV",
-      "type": "n8n-nodes-base.readBinaryFile",
-      "typeVersion": 1,
-      "position": [1080, 300]
     }
   ],
   "connections": {
@@ -54,44 +52,32 @@
       "main": [
         [
           {
-            "node": "Train model",
+            "node": "Train model via API",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Train model": {
+    "Train model via API": {
       "main": [
         [
           {
-            "node": "Generate recommendations",
+            "node": "Generate recommendations via API",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Generate recommendations": {
-      "main": [
-        [
-          {
-            "node": "Read recommendations CSV",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "Generate recommendations via API": {
+      "main": [[]]
     }
   },
   "active": false,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "prototype",
-  "meta": {
-    "templateCredsSetupCompleted": true
-  },
-  "tags": ["tfe", "mlops", "inventory"]
+  "pinData": {},
+  "tags": []
 }
-

@@ -1,4 +1,4 @@
-"""Demand forecasting and replenishment package for the TFE prototype."""
+"""Predicción de demanda y recomendación de reposición para el TFE."""
 
 __all__ = [
     "data",
@@ -9,4 +9,3 @@ __all__ = [
     "replenishment",
     "storage",
 ]
-

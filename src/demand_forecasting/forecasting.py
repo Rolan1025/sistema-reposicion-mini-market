@@ -1,3 +1,5 @@
+"""Generación de predicciones futuras para todos los productos."""
+
 from __future__ import annotations
 
 import pandas as pd
@@ -11,6 +13,11 @@ def forecast_demand(
     bundle: ModelBundle,
     horizon_days: int = 14,
 ) -> pd.DataFrame:
+    """Pronostica un día a la vez hasta completar el horizonte solicitado.
+
+    El método es recursivo: la predicción del primer día se añade al historial
+    y puede participar en los retardos usados para predecir el segundo día.
+    """
     history = history.copy()
     history["date"] = pd.to_datetime(history["date"])
     history = history.sort_values(["product_id", "date"]).reset_index(drop=True)
@@ -49,6 +56,8 @@ def forecast_demand(
 
         forecast_day = pd.DataFrame(day_rows)
         rows.extend(day_rows)
+        # Al no conocer todavía la venta real futura, se incorpora el propio
+        # pronóstico como historia disponible para la siguiente iteración.
         current = pd.concat(
             [
                 current,
@@ -60,4 +69,3 @@ def forecast_demand(
         )
 
     return pd.DataFrame(rows)
-

@@ -1,3 +1,5 @@
+"""Comando de consola para entrenar, comparar y guardar el modelo operativo."""
+
 from __future__ import annotations
 
 import argparse
@@ -10,6 +12,7 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 from demand_forecasting.config import DEFAULT_MODEL_PATH, DEFAULT_SALES_CSV, REPORTS_DIR
+from demand_forecasting.models import load_model_bundle
 from demand_forecasting.pipeline import train_pipeline
 
 
@@ -23,6 +26,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Ejecuta el pipeline y muestra el modelo y las métricas obtenidas."""
     args = parse_args()
     model_path, metrics = train_pipeline(
         sales_csv=args.sales_csv,
@@ -31,6 +35,7 @@ def main() -> None:
         test_days=args.test_days,
     )
     print(f"Model saved to: {model_path}")
+    print(f"Selected operational model: {load_model_bundle(model_path).model_name}")
     print(metrics.to_string(index=False))
 
 

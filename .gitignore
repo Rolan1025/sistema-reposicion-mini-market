@@ -1,6 +1,8 @@
 .venv/
+.venv-*/
 __pycache__/
 *.pyc
+*.pyo
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
@@ -11,7 +13,9 @@ models/*.pkl
 reports/*.csv
 reports/*.json
 reports/*.db
+reports/pytest-temp/
+reports/pytest-evidence-*/
 data/processed/*.csv
 data/processed/*.parquet
 n8n/.n8n/
-
+n8n/backups/

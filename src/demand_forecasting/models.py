@@ -1,3 +1,5 @@
+"""Definición, entrenamiento y almacenamiento de los modelos candidatos."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -16,6 +18,7 @@ from demand_forecasting.metrics import metrics_frame, regression_metrics
 
 @dataclass
 class ModelBundle:
+    """Paquete que guarda modelo, columnas, métricas y fecha de entrenamiento."""
     model_name: str
     model: object
     feature_columns: list[str]
@@ -24,6 +27,11 @@ class ModelBundle:
 
 
 def candidate_models(random_state: int = 42) -> dict[str, object]:
+    """Devuelve los dos modelos de aprendizaje automático comparados.
+
+    Ridge aprende una relación lineal regularizada. Random Forest combina
+    muchos árboles de decisión para capturar relaciones no lineales.
+    """
     return {
         "ridge": Pipeline(
             steps=[
@@ -42,6 +50,7 @@ def candidate_models(random_state: int = 42) -> dict[str, object]:
 
 
 def seasonal_naive_predictions(metadata_test: pd.DataFrame, full_metadata: pd.DataFrame) -> np.ndarray:
+    """Baseline sencillo: usa como predicción las ventas de hace siete días."""
     lookup = full_metadata[["date", "product_id", "units_sold"]].copy()
     lookup["date"] = pd.to_datetime(lookup["date"]) + pd.Timedelta(days=7)
     shifted = metadata_test[["date", "product_id"]].merge(
@@ -62,6 +71,8 @@ def train_and_select_model(
     test_days: int = 30,
     random_state: int = 42,
 ) -> ModelBundle:
+    """Compara modelos en el tramo final y reentrena el mejor con todo el dato."""
+    # La separación es temporal: nunca se mezclan fechas futuras en entrenamiento.
     cutoff = metadata["date"].max() - pd.Timedelta(days=test_days)
     train_mask = metadata["date"] <= cutoff
     test_mask = metadata["date"] > cutoff
@@ -87,6 +98,8 @@ def train_and_select_model(
     metrics = metrics_frame(rows)
     best_name = metrics.iloc[0]["model"]
 
+    # El baseline sirve como referencia, pero no es un objeto entrenable que
+    # podamos serializar para el forecast recursivo de la aplicación.
     if best_name == "seasonal_naive_7d":
         best_name = metrics[metrics["model"] != "seasonal_naive_7d"].iloc[0]["model"]
 
@@ -102,6 +115,7 @@ def train_and_select_model(
 
 
 def save_model_bundle(bundle: ModelBundle, path: str | Path) -> Path:
+    """Guarda el modelo entrenado en un archivo joblib."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(bundle, path)
@@ -109,5 +123,5 @@ def save_model_bundle(bundle: ModelBundle, path: str | Path) -> Path:
 
 
 def load_model_bundle(path: str | Path) -> ModelBundle:
+    """Carga el modelo previamente guardado para predecir sin reentrenar."""
     return joblib.load(path)
-

@@ -1,7 +1,13 @@
+# Nombre del grupo que se muestra en Docker Desktop.
+name: tfe-mini-market-prediccion-reposicion
+
 services:
-  dashboard:
+  panel-streamlit:
     build: .
-    container_name: mini_market_dashboard
+    container_name: tfe_mini_market_panel_streamlit
+    labels:
+      org.tfe.componente: "Panel visual Streamlit"
+      org.tfe.descripcion: "Consulta predicciones y recomendaciones de reposicion"
     ports:
       - "8501:8501"
     volumes:
@@ -11,9 +17,12 @@ services:
     environment:
       - PYTHONPATH=/app/src
 
-  api:
+  api-prediccion:
     build: .
-    container_name: mini_market_api
+    container_name: tfe_mini_market_api_prediccion
+    labels:
+      org.tfe.componente: "API de prediccion"
+      org.tfe.descripcion: "Expone entrenamiento, pronosticos y recomendaciones"
     command: uvicorn app.api:app --host 0.0.0.0 --port 8000
     ports:
       - "8000:8000"
@@ -24,15 +33,22 @@ services:
     environment:
       - PYTHONPATH=/app/src
 
-  n8n:
-    image: n8nio/n8n:1.69.2
-    container_name: mini_market_n8n
+  automatizacion-n8n:
+    image: n8nio/n8n:2.30.5
+    container_name: tfe_mini_market_automatizacion_n8n
+    labels:
+      org.tfe.componente: "Automatizacion n8n"
+      org.tfe.descripcion: "Programa el reentrenamiento y la generacion de recomendaciones"
     ports:
       - "5678:5678"
+    depends_on:
+      - api-prediccion
     volumes:
       - ./n8n/.n8n:/home/node/.n8n
       - ./:/workspace
     environment:
       - N8N_SECURE_COOKIE=false
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_MIGRATE_FS_STORAGE_PATH=true
+      - N8N_UNVERIFIED_PACKAGES_ENABLED=false
       - GENERIC_TIMEZONE=America/Bogota
-

@@ -19,17 +19,20 @@ app = FastAPI(title="Mini-market demand forecasting API", version="0.1.0")
 
 @app.get("/health")
 def health() -> dict:
+    """Comprobación rápida de que el servidor está disponible."""
     return {"status": "ok"}
 
 
 @app.post("/sample-data")
 def sample_data() -> dict:
+    """Restaura los CSV sintéticos; no debe usarse sobre datos reales."""
     sales_path, inventory_path = write_sample_data(DEFAULT_SALES_CSV, DEFAULT_INVENTORY_CSV)
     return {"sales_csv": str(sales_path), "inventory_csv": str(inventory_path)}
 
 
 @app.post("/train")
 def train(test_days: int = Query(30, ge=7, le=120)) -> dict:
+    """Entrena el modelo; test_days controla el tramo final de evaluación."""
     if not DEFAULT_SALES_CSV.exists() or not DEFAULT_INVENTORY_CSV.exists():
         write_sample_data(DEFAULT_SALES_CSV, DEFAULT_INVENTORY_CSV)
     model_path, metrics = train_pipeline(
@@ -47,6 +50,7 @@ def predict(
     safety_stock_days: int = Query(3, ge=0, le=30),
     review_period_days: int = Query(1, ge=1, le=14),
 ) -> dict:
+    """Devuelve predicciones diarias y recomendaciones de reposición."""
     if not DEFAULT_SALES_CSV.exists() or not DEFAULT_INVENTORY_CSV.exists():
         write_sample_data(DEFAULT_SALES_CSV, DEFAULT_INVENTORY_CSV)
     if not DEFAULT_MODEL_PATH.exists():

@@ -1,3 +1,5 @@
+"""Carga, validación y generación reproducible de los datos del proyecto."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -28,6 +30,7 @@ REQUIRED_INVENTORY_COLUMNS = {
 
 @dataclass(frozen=True)
 class ProductSeed:
+    """Parámetros fijos de un producto ficticio usado en la demostración."""
     product_id: str
     product_name: str
     category: str
@@ -53,6 +56,7 @@ PRODUCT_CATALOG = [
 
 
 def load_sales_csv(path: str | Path) -> pd.DataFrame:
+    """Carga ventas, valida columnas y convierte cantidades a números."""
     df = pd.read_csv(path, parse_dates=["date"])
     missing = REQUIRED_SALES_COLUMNS - set(df.columns)
     if missing:
@@ -66,6 +70,7 @@ def load_sales_csv(path: str | Path) -> pd.DataFrame:
 
 
 def load_inventory_csv(path: str | Path) -> pd.DataFrame:
+    """Carga la fotografía actual del inventario y valida su esquema."""
     df = pd.read_csv(path)
     missing = REQUIRED_INVENTORY_COLUMNS - set(df.columns)
     if missing:
@@ -79,14 +84,26 @@ def load_inventory_csv(path: str | Path) -> pd.DataFrame:
 
 
 def daily_product_series(sales: pd.DataFrame) -> pd.DataFrame:
+    """Obtiene exactamente una fila por producto y día.
+
+    Si falta una fecha intermedia se crea con cero ventas. El último precio
+    conocido se propaga para que todas las fechas tengan un valor utilizable.
+    """
     sales = sales.copy()
     sales["date"] = pd.to_datetime(sales["date"])
+    aggregations = {
+        "units_sold": ("units_sold", "sum"),
+        "unit_price": ("unit_price", "mean"),
+    }
+    if "promo" in sales.columns:
+        aggregations["promo"] = ("promo", "max")
     grouped = (
         sales.groupby(["date", "product_id", "product_name", "category"], as_index=False)
-        .agg(units_sold=("units_sold", "sum"), unit_price=("unit_price", "mean"))
+        .agg(**aggregations)
         .sort_values(["product_id", "date"])
     )
 
+    # Producto x todas las fechas crea el calendario completo de cada serie.
     all_dates = pd.date_range(grouped["date"].min(), grouped["date"].max(), freq="D")
     products = grouped[["product_id", "product_name", "category"]].drop_duplicates()
     grid = products.merge(pd.DataFrame({"date": all_dates}), how="cross")
@@ -98,10 +115,13 @@ def daily_product_series(sales: pd.DataFrame) -> pd.DataFrame:
     )
     complete["units_sold"] = complete["units_sold"].fillna(0)
     complete["unit_price"] = complete.groupby("product_id")["unit_price"].ffill().bfill()
+    if "promo" in complete.columns:
+        complete["promo"] = complete["promo"].fillna(0).astype(int)
     return complete.sort_values(["product_id", "date"]).reset_index(drop=True)
 
 
 def time_based_split(df: pd.DataFrame, test_days: int = 30) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Reserva los últimos días para probar el modelo con fechas no vistas."""
     cutoff = df["date"].max() - pd.Timedelta(days=test_days)
     train = df[df["date"] <= cutoff].copy()
     test = df[df["date"] > cutoff].copy()
@@ -115,6 +135,13 @@ def generate_synthetic_sales(
     end_date: str = "2025-12-31",
     random_state: int = 42,
 ) -> pd.DataFrame:
+    """Genera dos años de ventas ficticias, pero reproducibles.
+
+    random_state=42 fija la secuencia aleatoria. Con los mismos parámetros y
+    el mismo código, cada ejecución produce exactamente las mismas 7.310 filas.
+    Se simulan fines de semana, quincenas, temporadas, promociones y ruido.
+    """
+    # default_rng reinicia siempre en el mismo punto gracias a la semilla.
     rng = np.random.default_rng(random_state)
     dates = pd.date_range(start_date, end_date, freq="D")
     rows = []
@@ -157,6 +184,7 @@ def generate_synthetic_sales(
 
 
 def generate_inventory_snapshot(random_state: int = 42) -> pd.DataFrame:
+    """Genera un inventario reproducible para los diez productos ficticios."""
     rng = np.random.default_rng(random_state + 1)
     rows = []
     for product in PRODUCT_CATALOG:
@@ -177,6 +205,11 @@ def generate_inventory_snapshot(random_state: int = 42) -> pd.DataFrame:
 
 
 def write_sample_data(sales_path: str | Path, inventory_path: str | Path) -> tuple[Path, Path]:
+    """Restaura los CSV de demostración y sobrescribe los archivos existentes.
+
+    No es necesario llamarla en cada arranque. Se usa la primera vez o cuando
+    se desea volver al escenario exacto documentado en la memoria del TFE.
+    """
     sales_path = Path(sales_path)
     inventory_path = Path(inventory_path)
     sales_path.parent.mkdir(parents=True, exist_ok=True)
@@ -184,4 +217,3 @@ def write_sample_data(sales_path: str | Path, inventory_path: str | Path) -> tup
     generate_synthetic_sales().to_csv(sales_path, index=False)
     generate_inventory_snapshot().to_csv(inventory_path, index=False)
     return sales_path, inventory_path
-

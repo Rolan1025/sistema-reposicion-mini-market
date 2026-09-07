@@ -1,3 +1,5 @@
+"""Comando para crear forecast, recomendaciones y el snapshot SQLite."""
+
 from __future__ import annotations
 
 import argparse
@@ -36,6 +38,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Carga el modelo ya entrenado y produce las salidas operativas."""
     args = parse_args()
     forecast, recommendations = predict_pipeline(
         sales_csv=args.sales_csv,

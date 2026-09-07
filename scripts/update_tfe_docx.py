@@ -166,9 +166,9 @@ def create_figures() -> tuple[Path, Path]:
     boxes = [
         ((40, 210, 260, 350), "Ventas e\ninventario"),
         ((330, 120, 590, 260), "Pipeline de datos\npandas"),
-        ((330, 360, 590, 500), "Parametros de\nreposicion"),
+        ((330, 360, 590, 500), "Parámetros de\nreposición"),
         ((670, 120, 930, 260), "Entrenamiento\nscikit-learn"),
-        ((670, 360, 930, 500), "Forecast\n7/14/30 dias"),
+        ((670, 360, 930, 500), "Forecast\n7/14/30 días"),
         ((1010, 210, 1270, 350), "Dashboard/API\nreportes"),
     ]
     for box, label in boxes:
@@ -179,7 +179,7 @@ def create_figures() -> tuple[Path, Path]:
     draw_arrow(draw, (930, 190), (1010, 250))
     draw_arrow(draw, (590, 430), (670, 430))
     draw_arrow(draw, (930, 430), (1010, 310))
-    draw.text((40, 35), "Arquitectura logica implementada", fill="#1F4E79", font=ImageFont.truetype("arial.ttf", 28) if Path("C:/Windows/Fonts/arial.ttf").exists() else font())
+    draw.text((40, 35), "Arquitectura lógica implementada", fill="#1F4E79", font=ImageFont.truetype("arial.ttf", 28) if Path("C:/Windows/Fonts/arial.ttf").exists() else font())
     img.save(architecture)
 
     pipeline = FIG_DIR / "figura_pipeline.png"
@@ -188,7 +188,7 @@ def create_figures() -> tuple[Path, Path]:
     labels = [
         "Generar o\ncargar CSV",
         "Validar\ncampos",
-        "Agregar por\ndia-producto",
+        "Agregar por\ndía-producto",
         "Crear lags y\ncalendario",
         "Entrenar y\ncomparar",
         "Guardar\nmodelo",
@@ -246,7 +246,7 @@ def main() -> None:
 
     doc = Document(INPUT_DOCX)
 
-    # Replace the methodology chapter with concrete, executed methodology.
+    # Sustituye la metodología planteada por la metodología realmente ejecutada.
     cursor = clear_section_after_heading(doc, "Objetivos concretos")
     cursor = add_heading(doc, cursor, "Objetivo general", 2)
     cursor = add_body(
@@ -282,7 +282,7 @@ def main() -> None:
         "La trazabilidad se materializo en el repositorio local sistema-reposicion-mini-market. Cada resultado incluido en la memoria se asocia con un script, archivo de salida o prueba automatizada. Esta decision permite que el prototipo pueda reproducirse sin depender de cuadernos manuales ni de pasos no documentados.",
     )
 
-    # Replace chapter 5.
+    # Sustituye el capítulo 5 por la descripción de la implementación.
     cursor = clear_section_after_heading(doc, "Diseño y desarrollo")
     cursor = add_body(
         doc,
@@ -355,7 +355,7 @@ def main() -> None:
     ]:
         cursor = add_bullet(doc, cursor, item)
 
-    # Replace chapter 6.
+    # Sustituye el capítulo 6 por la evaluación cuantitativa.
     cursor = clear_section_after_heading(doc, "Evaluación de la solución")
     cursor = add_body(
         doc,
@@ -429,7 +429,7 @@ def main() -> None:
         "La evaluacion confirma la ejecucion tecnica del prototipo y la comparacion cuantitativa entre modelos. No obstante, la validacion con usuarios expertos no se completo en esta fase, por lo que sus resultados no se reportan como evidencia. Esta limitacion se declara de forma explicita y se propone como siguiente paso antes de una entrega final cerrada.",
     )
 
-    # Replace chapter 7.
+    # Sustituye el capítulo 7 por las conclusiones y líneas futuras.
     cursor = clear_section_after_heading(doc, "Conclusiones y trabajo futuro")
     cursor = add_body(
         doc,
@@ -464,7 +464,7 @@ def main() -> None:
     ]:
         cursor = add_bullet(doc, cursor, item)
 
-    # Replace Annex A.
+    # Sustituye el anexo A por la matriz de verificación actualizada.
     cursor = clear_section_after_heading(doc, "Anexo A")
     cursor = add_body(
         doc,
@@ -494,7 +494,7 @@ def main() -> None:
     ]:
         cursor = add_bullet(doc, cursor, item)
 
-    # Small updates in abstract/reserved wording.
+    # Actualiza formulaciones puntuales del resumen y otros apartados.
     replacements = {
         "Este Trabajo Fin de Estudios plantea el diseño, desarrollo y validación": "Este Trabajo Fin de Estudios presenta el diseño, desarrollo y validación",
         "This Final Project proposes the design, development and validation": "This Final Project presents the design, development and validation",
@@ -512,7 +512,7 @@ def main() -> None:
             if old in paragraph.text:
                 paragraph.text = paragraph.text.replace(old, new)
 
-    # Basic polish.
+    # Aplica la revisión editorial final.
     for paragraph in doc.paragraphs:
         for run in paragraph.runs:
             run.font.name = "Arial"
