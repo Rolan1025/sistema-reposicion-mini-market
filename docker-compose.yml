@@ -4,7 +4,10 @@ name: tfe-mini-market-prediccion-reposicion
 services:
   panel-streamlit:
     build: .
+    image: tfe-mini-market-aplicacion:latest
     container_name: tfe_mini_market_panel_streamlit
+    init: true
+    restart: unless-stopped
     labels:
       org.tfe.componente: "Panel visual Streamlit"
       org.tfe.descripcion: "Consulta predicciones y recomendaciones de reposicion"
@@ -15,15 +18,24 @@ services:
       - ./models:/app/models
       - ./reports:/app/reports
     environment:
-      - PYTHONPATH=/app/src
+      PYTHONPATH: /app/src
+      STREAMLIT_BROWSER_GATHER_USAGE_STATS: "false"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8501/_stcore/health', timeout=5)"]
+      interval: 10s
+      timeout: 6s
+      retries: 12
+      start_period: 180s
 
   api-prediccion:
-    build: .
+    image: tfe-mini-market-aplicacion:latest
     container_name: tfe_mini_market_api_prediccion
+    init: true
+    restart: unless-stopped
     labels:
       org.tfe.componente: "API de prediccion"
       org.tfe.descripcion: "Expone entrenamiento, pronosticos y recomendaciones"
-    command: uvicorn app.api:app --host 0.0.0.0 --port 8000
+    command: python -m uvicorn app.api:app --host 0.0.0.0 --port 8000
     ports:
       - "8000:8000"
     volumes:
@@ -31,24 +43,41 @@ services:
       - ./models:/app/models
       - ./reports:/app/reports
     environment:
-      - PYTHONPATH=/app/src
+      PYTHONPATH: /app/src
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)"]
+      interval: 10s
+      timeout: 6s
+      retries: 12
+      start_period: 20s
 
   automatizacion-n8n:
-    image: n8nio/n8n:2.30.5
+    image: n8nio/n8n:2.46.6
     container_name: tfe_mini_market_automatizacion_n8n
+    restart: unless-stopped
     labels:
       org.tfe.componente: "Automatizacion n8n"
       org.tfe.descripcion: "Programa el reentrenamiento y la generacion de recomendaciones"
     ports:
       - "5678:5678"
     depends_on:
-      - api-prediccion
+      api-prediccion:
+        condition: service_healthy
     volumes:
       - ./n8n/.n8n:/home/node/.n8n
-      - ./:/workspace
     environment:
-      - N8N_SECURE_COOKIE=false
-      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
-      - N8N_MIGRATE_FS_STORAGE_PATH=true
-      - N8N_UNVERIFIED_PACKAGES_ENABLED=false
-      - GENERIC_TIMEZONE=America/Bogota
+      N8N_SECURE_COOKIE: "false"
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "false"
+      N8N_MIGRATE_FS_STORAGE_PATH: "true"
+      N8N_UNVERIFIED_PACKAGES_ENABLED: "false"
+      N8N_RUNNERS_TASK_TIMEOUT: "300"
+      N8N_COMPRESSION_NODE_MAX_DECOMPRESSED_SIZE_BYTES: "2147483648"
+      N8N_COMPRESSION_NODE_MAX_ZIP_ENTRIES: "5000"
+      GENERIC_TIMEZONE: America/Bogota
+      TZ: America/Bogota
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5678/healthz').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 6s
+      retries: 12
+      start_period: 60s

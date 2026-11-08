@@ -9,11 +9,11 @@ ENV PYTHONUNBUFFERED=1
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY src ./src
+COPY app ./app
+RUN mkdir -p data/raw models reports
 
-RUN python scripts/generate_sample_data.py && python scripts/train.py
+EXPOSE 8000 8501
 
-EXPOSE 8501
-
-CMD ["streamlit", "run", "app/streamlit_app.py", "--server.address=0.0.0.0", "--server.port=8501"]
+CMD ["python", "-m", "streamlit", "run", "app/streamlit_app.py", "--server.address=0.0.0.0", "--server.port=8501"]
 
